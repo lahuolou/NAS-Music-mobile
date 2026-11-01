@@ -522,7 +522,8 @@ var activeSection by remember { mutableStateOf(SettingsSection.GENERAL) }
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 8.dp)
+                    // 与下方分区内容同为 12dp 内边距：避免首尾 chip 贴屏幕边缘被硬切
+                    .padding(start = 12.dp, end = 12.dp, bottom = 8.dp)
                     .horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {

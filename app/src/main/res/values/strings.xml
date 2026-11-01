@@ -56,7 +56,6 @@
 
     <string name="library_recently_added">最近添加</string>
     <string name="library_search_hint">输入歌曲名、歌手或拼音首字母</string>
-    <string name="library_remote_hint">◀ ▶ 导航  |  ◀◀ ▶▶ 切歌  |  确认 播放  |  长按 菜单  |  侧边索引 跳转</string>
     <string name="library_no_genres">暂无风格数据</string>
     <string name="library_no_years">暂无年代数据</string>
 

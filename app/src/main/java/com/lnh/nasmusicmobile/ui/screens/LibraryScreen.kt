@@ -284,20 +284,6 @@ fun LibraryScreen(
         }
     }
 
-    // Task 14: 首次曲库快捷键提示（3s 自动消失）
-    val context = LocalContext.current
-    val appPrefs = remember { com.lnh.nasmusicmobile.data.prefs.AppPreferences.getInstance(context) }
-    val showShortcutHint by appPrefs.showLibraryShortcutHint.collectAsState(initial = true)
-    var shortcutHintVisible by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) {
-        if (showShortcutHint) {
-            shortcutHintVisible = true
-            kotlinx.coroutines.delay(3000)
-            shortcutHintVisible = false
-            appPrefs.setShowLibraryShortcutHint(false)
-        }
-    }
-
     // Task 8: 滚动位置记忆 — 从 ViewModel 恢复初始位置
     val albumListState = androidx.compose.foundation.lazy.grid.rememberLazyGridState(
         initialFirstVisibleItemIndex = albumScrollIndex,
@@ -792,29 +778,7 @@ fun LibraryScreen(
                     }   // 页面 graphicsLayer Box
                 }   // for (pageIdx in composedRange)
             }   // pager 容器 Box
-
-                // Task 14: 遥控器快捷键提示浮层（3s 自动消失）
-                androidx.compose.animation.AnimatedVisibility(
-                    visible = shortcutHintVisible,
-                    enter = androidx.compose.animation.fadeIn(),
-                    exit = androidx.compose.animation.fadeOut(),
-                    modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 12.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(NasMusicColors.SurfaceVariant)
-                            .padding(horizontal = 20.dp, vertical = 10.dp)
-                    ) {
-                        Text(
-                            text = stringResource(R.string.library_remote_hint),
-                            color = NasMusicColors.TextSecondary,
-                            fontSize = FontSize.button(),
-                            maxLines = 1
-                        )
-                    }
-                }
-            }   // AnimatedVisibility
+            }   // 内容区域 Box 内层容器（原遥控器提示浮层所在作用域）
 
         }   // 内容区域 Box
 
