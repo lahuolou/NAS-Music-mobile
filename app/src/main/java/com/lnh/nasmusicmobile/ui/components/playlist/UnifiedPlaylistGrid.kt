@@ -1,0 +1,55 @@
+package com.lnh.nasmusicmobile.ui.components.playlist
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.compose.material3.Text
+import com.lnh.nasmusicmobile.data.model.Playlist
+import com.lnh.nasmusicmobile.data.model.Song
+import com.lnh.nasmusicmobile.ui.theme.FontSize
+import com.lnh.nasmusicmobile.ui.theme.NasMusicColors
+/**
+ * 统一歌单网格/横排组件
+ *
+ * 以 LazyRow 横向滚动展示歌单卡片列表，用于推荐歌单、我的歌单等场景。
+ *
+ * @param playlists 歌单数据列表（Pair<Playlist, List<Song>>）
+ * @param onPlaylistClick 歌单点击回调
+ * @param modifier 额外 Modifier
+ * @param header 可选的头部标题
+ */
+@Composable
+fun UnifiedPlaylistGrid(
+    playlists: List<Pair<Playlist, List<Song>>>,
+    onPlaylistClick: (Pair<Playlist, List<Song>>) -> Unit,
+    modifier: Modifier = Modifier,
+    header: String? = null
+) {
+    if (playlists.isEmpty()) return
+
+    if (header != null) {
+        Text(
+            text = header,
+            color = NasMusicColors.TextPrimary,
+            fontSize = FontSize.button(),
+            modifier = modifier.padding(bottom = 4.dp)
+        )
+    }
+
+    LazyRow(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        items(playlists, key = { it.first.id }) { (playlist, songs) ->
+            UnifiedPlaylistCard(
+                playlist = playlist,
+                onClick = { onPlaylistClick(playlist to songs) }
+            )
+        }
+    }
+}
