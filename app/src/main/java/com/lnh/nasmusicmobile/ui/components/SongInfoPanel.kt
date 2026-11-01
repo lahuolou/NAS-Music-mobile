@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.material3.Text
 import com.lnh.nasmusicmobile.R
 import com.lnh.nasmusicmobile.data.model.Song
+import com.lnh.nasmusicmobile.data.model.isLiveRadio
 import com.lnh.nasmusicmobile.data.model.sourceType
 import com.lnh.nasmusicmobile.ui.components.FocusableSurface
 import com.lnh.nasmusicmobile.data.model.SongTechnicalInfo
@@ -92,7 +93,11 @@ fun SongInfoPanel(
             InfoRow(stringResource(R.string.song_info_album_label), song.album.ifBlank { "—" })
             if (song.year != null) InfoRow(stringResource(R.string.song_info_year_label), "${song.year}")
             if (song.genre != null) InfoRow(stringResource(R.string.song_info_genre_label), song.genre)
-            InfoRow(stringResource(R.string.song_info_duration_label), TimeUtils.formatDuration(song.durationMs))
+            InfoRow(
+                stringResource(R.string.song_info_duration_label),
+                if (song.isLiveRadio()) stringResource(R.string.network_radio_live)
+                else TimeUtils.formatDuration(song.durationMs)
+            )
             InfoRow(stringResource(R.string.song_info_track_label), if (song.trackNumber > 0) "${song.trackNumber}" else "—")
 
             Spacer(modifier = Modifier.height(12.dp))

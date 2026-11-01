@@ -5,6 +5,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -62,9 +63,9 @@ import com.lnh.nasmusicmobile.ui.components.common.SourceBadge
 import com.lnh.nasmusicmobile.ui.components.portraitTouchTarget
 import com.lnh.nasmusicmobile.ui.theme.FontSize
 import com.lnh.nasmusicmobile.ui.theme.LocalUiMode
+import com.lnh.nasmusicmobile.ui.theme.LocalUiPortrait
 import com.lnh.nasmusicmobile.ui.theme.NasMusicColors
 import com.lnh.nasmusicmobile.ui.theme.UiMode
-import com.lnh.nasmusicmobile.util.TimeUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -282,7 +283,12 @@ private fun SongRowModeRow(
     val tvDevice = false
     val activeFocus = isRowFocused && tvDevice
 
-    // 时长与操作按钮作为行内右侧第二列（竖屏独立操作行已随竖屏下线移除）。
+    // 竖屏行宽不够：4 个操作按钮并排要吃掉约 44% 宽度，会把歌名列压到只剩 1~2 个字符
+    // （2026-11-02 发现页"歌名数字串 / 歌名只剩碎片"事故）。竖屏改为第二行右对齐放按钮，
+    // 横屏保持单行（原布局逐字等价）。
+    val isPortrait = LocalUiPortrait.current
+
+    // 时长与操作按钮作为行内右侧第二列（横屏）；竖屏下操作按钮下沉到第二行。
     val actionButtons: @Composable () -> Unit = {
         Row(verticalAlignment = Alignment.CenterVertically) {
             // 下载按钮（None 不渲染；Idle ⬇ 下载 / Queued ⋯ / Downloading ⇣ / Completed ✓ 删除 / Failed ✕ 重试）
@@ -503,15 +509,29 @@ private fun SongRowModeRow(
                     )
                 }
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(
-                    text = TimeUtils.formatDuration(song.durationMs),
+                SongDurationText(
+                    song = song,
                     color = NasMusicColors.TextSecondary,
                     fontSize = FontSize.button()
                 )
             }
 
-            // 操作按钮在行内右侧
-            actionButtons()
+            // 操作按钮在行内右侧（横屏）；竖屏下移到下方独立行，把宽度让给歌名
+            if (!isPortrait) {
+                actionButtons()
+            }
+        }
+        if (isPortrait) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .padding(bottom = 8.dp),
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                actionButtons()
+            }
         }
     }
     }
@@ -842,8 +862,8 @@ private fun SongRowModeCompact(
                 )
             }
             // 时长
-            Text(
-                text = TimeUtils.formatDuration(song.durationMs),
+            SongDurationText(
+                song = song,
                 color = NasMusicColors.TextSecondary,
                 fontSize = FontSize.small()
             )

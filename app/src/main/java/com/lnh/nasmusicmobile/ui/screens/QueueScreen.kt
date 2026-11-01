@@ -69,8 +69,8 @@ import com.lnh.nasmusicmobile.ui.theme.LocalUiMode
 import com.lnh.nasmusicmobile.ui.theme.LocalUiPortrait
 import com.lnh.nasmusicmobile.ui.theme.NasMusicColors
 import com.lnh.nasmusicmobile.ui.theme.UiMode
-import com.lnh.nasmusicmobile.util.TimeUtils
 import com.lnh.nasmusicmobile.ui.components.common.SourceBadge
+import com.lnh.nasmusicmobile.ui.components.song.SongDurationText
 import kotlinx.coroutines.launch
 import java.util.Locale
 /**
@@ -360,7 +360,7 @@ private fun QueueListPane(
                                 Spacer(modifier = Modifier.width(8.dp))
                                 SourceBadge(song = song)
                                 Spacer(modifier = Modifier.width(12.dp))
-                                Text(text = TimeUtils.formatDuration(song.durationMs), color = NasMusicColors.TextSecondary, fontSize = FontSize.button())
+                                SongDurationText(song = song, color = NasMusicColors.TextSecondary, fontSize = FontSize.button())
                             }
                             // 右侧操作：上移 / 下移 / 移出
                             if (index > 0) {

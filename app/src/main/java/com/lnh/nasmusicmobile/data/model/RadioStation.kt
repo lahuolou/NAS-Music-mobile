@@ -45,3 +45,12 @@ data class RadioStation(
  * 是否为电台歌曲（供播放链路 / UI 判断直播态）
  */
 fun String?.isRadioSong(): Boolean = this == RadioStation.SOURCE_ID
+
+/**
+ * 直播态判据（结构化，⛔ 不要比较文案、也不要比较 `durationMs` 的哨兵值）。
+ *
+ * [RadioStation.toSong] 用 `durationMs = Long.MAX_VALUE` 表示无限直播流，
+ * 而 `TimeUtils.formatDuration(Long.MAX_VALUE)` 会产出 `153722867280912:55`
+ * ——列表行不判这个标志就会把巨串直接渲染出来（2026-11-02 发现页"歌名数字串"事故）。
+ */
+fun Song.isLiveRadio(): Boolean = networkSource.isRadioSong()

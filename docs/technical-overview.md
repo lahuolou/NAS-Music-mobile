@@ -17581,3 +17581,31 @@ ORT 的权重分配走 native malloc，`separate()` 里那道 `Runtime.maxMemory
 - 未覆盖：竖屏 `NowPlaying` 单列布局需连上后端并播放曲目后才能验收。
 
 **范围约束**：只改 `PhoneNavBar` 一个组件与文案口径；不涉及形态体系、播放链路、Manifest 与依赖。
+
+## §10.285 「发现」页电台曲目时长显示修复（2026-11-02）
+
+**现象**：「发现」页筛选全为「所有」时，20 行的歌名位置显示 `153722867` / `280912:55`；切到「粤语」等筛选后歌名只剩 1~2 个字符并随时间滚动。
+
+**根因（设备实证 + 源码链路）**：
+1. `RadioStation.toSong()` 用 `durationMs = Long.MAX_VALUE` 表示无限直播流（KDoc 约定「UI 层据 `networkSource=="radio"` 显示『直播』」，但该约定从未在任何列表行落地）。
+2. `TimeUtils.formatDuration(Long.MAX_VALUE)` = `"153722867280912:55"`（`Long.MAX_VALUE/1000/60`），即用户看到的数字串。
+3. 4 处无条件渲染时长、无电台分支：`UnifiedSongRow` `MODE_ROW`/`MODE_CARD`、`QueueScreen`、`SongInfoPanel`。
+4. **布局放大器**：`MODE_ROW` 的时长 `Text` 与歌名所在 `Column(weight(1f))` 同处一个 Row 且是非 weight 先测量子项，19 字符巨串吃光宽度 ⇒ 歌名列压到 ≈0。
+5. 全「所有」走 `loadDiscoverFallback()` 的电台兜底（`stations.shuffled().take(20).map { it.toSong() }`），因此整页 20 行都是电台。
+6. **第二放大器（设备复测补充）**：竖屏行内 4 个操作按钮（各 56dp + 10dp 间距）约占 44% 行宽，即使时长换成「直播」，歌名列仍只剩约 63dp（1~2 字符）。原「竖屏独立操作行」在手机单平台化时被移除（`UnifiedSongRow` 原注释）。
+
+**实施**：
+- `RadioStation.kt`：新增结构化判据 `fun Song.isLiveRadio(): Boolean = networkSource.isRadioSong()`（⛔ 不比较文案、不比较 `durationMs` 哨兵）。
+- 新增 `ui/components/song/SongDurationText.kt`：`internal @Composable` 单点实现「`isLiveRadio()` → `R.string.network_radio_live`，否则 `formatDuration`」，`maxLines=1`、`softWrap=false`；复用既有资源，未新增字符串。
+- 替换 4 处调用点：`UnifiedSongRow` `MODE_ROW`/`MODE_CARD`、`QueueScreen`、`SongInfoPanel`（后者 `InfoRow` 接收 String，就地判 `isLiveRadio()`）。
+- `UnifiedSongRow` `MODE_ROW`：竖屏（`LocalUiPortrait`）把 `actionButtons()` 下沉到行尾第二行右对齐，横屏保持单行（原布局逐字等价）。这是让歌名恢复可读宽度的必要改动 —— 仅替换时长文案时歌名列仍只有 1~2 字符（设备实测）。
+- ⛔ 未改 `TimeUtils.formatDuration` 语义、未改 `Long.MAX_VALUE` 哨兵、未改 `loadDiscoverFallback()` 兜底逻辑。
+
+**验证**：
+- `assembleDebug` BUILD SUCCESSFUL。
+- 新增 `SongLiveRadioTest`（3 例）：电台 → `isLiveRadio() == true`、普通网络/NAS → false、回归锚点 `formatDuration(Long.MAX_VALUE) == "153722867280912:55"`。**全部通过**。
+- 模拟器 `25060RK16C` 竖屏实测：全「所有」→ 20 行显示完整台名（`CCTV-8电视剧伴音`、`CRI环球资讯广播`）+「直播」，歌名节点宽 276px（≈158dp）；「粤语」→ `你瞒我瞒` / `晚风心里吹` 完整，时长 `3:57` / `3:06`；操作按钮位于第二行右对齐。截图 `output/discover_fixed_portrait.png`、`output/discover_yue_fixed.png`、横屏 `output/device_after_fix.png`。
+- ⚠️ **本机 `testDebugUnitTest` 当前不可用（环境性，与本次改动无关）**：Gradle 9.5 把测试 worker 的超长 classpath 写入 `~/.gradle/.tmp/gradle-worker-classpath*.txt`（UTF-8），而 JVM 启动器按**平台默认编码（CP936）**解码 @argfile，`C:\Users\内涵哥\` 的路径字节被解坏 ⇒ 每个 worker 都是 `ClassNotFoundException: worker.org.gradle.process.internal.worker.GradleWorkerMain`（JBR 17 与 JDK 27 实测同样表现，GBK 编码的同一 argfile 可正常启动）。同一原因首轮还导致 `results-generic.bin` 写坏、后续读缓存报 `EOFException`（删掉 `app/build/test-results/testDebugUnitTest/binary` 可消除该表现）。绕行验证：取该 argfile 转成 GBK 编码 + 追加 `org.junit.runner.JUnitCore <测试类>`，用 JBR 直接跑，得到 `OK (3 tests)`。
+
+**范围约束**：只改渲染层（5 个文件 + 1 个新组件 + 1 个测试）；数据/播放/后端/Manifest/依赖零改动。
+
