@@ -68,3 +68,8 @@
 -dontwarn java.awt.**
 -dontwarn javax.imageio.ImageIO
 -dontwarn javax.imageio.stream.ImageInputStream
+
+# slf4j-api 由传递依赖引入，运行时通过反射查找日志绑定实现；本工程不提供绑定，
+# Android 上会回落到 NOP 日志器（仅首条日志时打印一次提示）。该引用不参与业务逻辑，
+# 仅需抑制 R8 的缺失类告警，不要 -keep 该类（它并不存在）。
+-dontwarn org.slf4j.impl.StaticLoggerBinder
