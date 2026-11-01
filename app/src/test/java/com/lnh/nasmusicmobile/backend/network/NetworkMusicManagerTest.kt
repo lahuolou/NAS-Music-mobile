@@ -378,7 +378,13 @@ class NetworkMusicManagerTest {
             manager.search("query")
             fail("CancellationException should propagate")
         } catch (actual: CancellationException) {
-            assertTrue(actual === cancellation)
+            // search() 经 withContext(Dispatchers.IO) 跨调度边界传播：CI/本地 Test 任务默认 -ea 开启
+            // kotlinx 栈恢复（stacktrace recovery），抛出的是恢复副本而非原实例，故沿 cause 链找原实例。
+            val chain = generateSequence<Throwable>(actual) { it.cause }.toList()
+            assertTrue(
+                "propagated CancellationException should contain the original instance in its cause chain",
+                chain.any { it === cancellation }
+            )
         }
 
         assertEquals(1, fakeServiceA.searchCallCount)
