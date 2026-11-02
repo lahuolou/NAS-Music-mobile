@@ -127,15 +127,16 @@ android {
     }
 }
 
-// APK 文件名格式：NAS-Music-TV-release-v2-24-2.apk（版本号点号替换为横线）
+// APK 文件名格式：NAS-Music-mobile-release-v1-0-0.apk（版本号点号替换为横线）
 // 2026-10-29 批次 1：legacy variant API（applicationVariants / outputs.all / ApkVariantOutputImpl）
 // 在 AGP 9 弃用、AGP 10 移除（newDsl=false 移除后不可用），迁移到稳定的 androidComponents.onVariants。
-// 输出命名保持不变——CI 的 build job 与上传步依赖 NAS-Music-TV-release-v<版本>.apk，勿改格式。
+// 输出命名与 CI build job / 上传步保持一致，改名必须两处同步。
+// 2026-11-02：随手机单平台化（TV 形态移除）与 v1.0.0 首发，前缀 NAS-Music-TV → NAS-Music-mobile。
 androidComponents {
     onVariants(selector().all()) { variant: com.android.build.api.variant.ApplicationVariant ->
         val vName = appVersionName.replace(".", "-")
         variant.outputs.forEach { output ->
-            output.outputFileName.set("NAS-Music-TV-${variant.name}-v${vName}.apk")
+            output.outputFileName.set("NAS-Music-mobile-${variant.name}-v${vName}.apk")
         }
     }
 }

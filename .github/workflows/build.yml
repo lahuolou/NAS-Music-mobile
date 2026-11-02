@@ -106,7 +106,7 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: NAS-Music-TV-release-v${{ env.APK_VERSION_DASHED }}
+          name: NAS-Music-mobile-release-v${{ env.APK_VERSION_DASHED }}
           path: app/build/outputs/apk/release/
 
       - name: Extract release notes from CHANGELOG
@@ -170,14 +170,14 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           TAG="${{ github.ref_name }}"
-          APK="app/build/outputs/apk/release/NAS-Music-TV-release-v${{ env.APK_VERSION_DASHED }}.apk"
+          APK="app/build/outputs/apk/release/NAS-Music-mobile-release-v${{ env.APK_VERSION_DASHED }}.apk"
           # 删除已存在的 release（如果有），重新创建
           if gh release view "$TAG" --json tagName &>/dev/null; then
             echo "Deleting existing release $TAG..."
             gh release delete "$TAG" --yes
           fi
           echo "Creating release $TAG..."
-          ARGS=("--notes-file" "release_notes.md" "--title" "NAS-Music-TV $TAG")
+          ARGS=("--notes-file" "release_notes.md" "--title" "NAS-Music-mobile $TAG")
           if [ -f "$APK" ]; then
             gh release create "$TAG" "${ARGS[@]}" "$APK"
           else
